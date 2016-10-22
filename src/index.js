@@ -6,11 +6,11 @@ type Config = {
   cache?: boolean,
   key: string,
   ttl?: number
-}
+};
 type CacheItem = {
   data: Object,
   expires: number
-}
+};
 
 export default class Rainman {
   _config: Config;
