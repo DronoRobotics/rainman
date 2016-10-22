@@ -7,10 +7,10 @@
   "license": "MIT",
   "scripts": {
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
-    "lint": "eslint . && yarn run flow",
+    "lint": "eslint . && npm run flow",
     "lint:staged": "lint-staged",
     "test": "mocha --compilers js:babel-core/register --require babel-polyfill __tests__/**/*.spec.js",
-    "coverage": "nyc --check-coverage --lines 95 --functions 95 --branches 95 yarn test"
+    "coverage": "nyc --check-coverage --lines 95 --functions 95 --branches 95 npm test"
   },
   "lint-staged": {
     "*.js": "eslint"
