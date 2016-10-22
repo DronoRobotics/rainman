@@ -8,9 +8,11 @@
   "scripts": {
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "lint": "eslint . && yarn run flow",
-    "test": "mocha --compilers js:babel-core/register --require babel-polyfill __tests__"
+    "test": "mocha --compilers js:babel-core/register --require babel-polyfill __tests__/**/*.spec.js",
+    "coverage": "nyc --check-coverage --lines 95 --functions 95 --branches 95 yarn test"
   },
   "devDependencies": {
+    "babel-cli": "^6.16.0",
     "babel-core": "^6.17.0",
     "babel-eslint": "^7.0.0",
     "babel-plugin-transform-async-to-generator": "^6.16.0",
@@ -24,6 +26,7 @@
     "flow-bin": "^0.33.0",
     "mocha": "^3.1.2",
     "nock": "^8.1.0",
+    "nyc": "^8.3.2",
     "sinon": "^1.17.6"
   },
   "dependencies": {
