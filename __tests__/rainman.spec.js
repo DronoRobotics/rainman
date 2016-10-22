@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import nock from 'nock';
+import sinon from 'sinon';
 
 import * as rainmanFixtures from './__fixtures__/rainman.fixture';
 import * as openWeatherMapFixtures from './__fixtures__/openWeatherMap.fixture';
@@ -8,10 +9,10 @@ import Rainman from '../';
 
 describe('Rainman', () => {
   let rainman;
+  beforeEach(() => {
+    rainman = new Rainman(rainmanFixtures.validAPIKey);
+  });
   describe('initialisation', () => {
-    beforeEach(() => {
-      rainman = new Rainman(rainmanFixtures.validAPIKey);
-    });
     it('should assign default values when passed no parameters', () => {
       const expectedValue = {
         ...rainmanFixtures.validAPIKey,
@@ -30,28 +31,133 @@ describe('Rainman', () => {
       expect(rainman._config).to.deep.equal(expectedValue);
     });
     it('should create an empty cache', () => {
-      expect(rainman.cache).to.deep.equal([]);
+      expect(rainman.cache).to.deep.equal({});
     });
-    it('should throw an error when passing no API key', () => {
+    it('should throw an error when passing an invalid API key', () => {
       expect(() => new Rainman(rainmanFixtures.invalidAPIKey)).to.throw('Invalid API Key provided to Rainman!');
     });
   });
-  describe('#get', () => {
+  describe('Method: _addToCache()', () => {
+    it('should save the given object to the cache', () => {
+      const clock = sinon.useFakeTimers(new Date().getTime());
+      rainman = new Rainman(rainmanFixtures.validAPIKey);
+      const expectedValue = {
+        data: openWeatherMapFixtures.validResponse,
+        expires: new Date().getTime() + rainman._config.ttl
+      };
+      const key = '12345678';
+      rainman._addToCache(key, openWeatherMapFixtures.validResponse);
+      expect(rainman.cache[key]).to.deep.equal(expectedValue);
+      clock.restore();
+    });
+  });
+  describe('Method: _itemExistsInCache()', () => {
+    it('should return true if the item exists in the cache', () => {
+      rainman.cache['123'] = {};
+      expect(rainman._itemExistsInCache('123')).to.be.true;
+    });
+    it('should return false if the item does not exist in the cache', () => {
+      expect(rainman._itemExistsInCache('123')).to.be.false;
+    });
+  });
+  describe('Method: _itemIsValid', () => {
+    it('should return true if the current time is before the expiry date', () => {
+      rainman.cache['123'] = { expires: new Date().getTime() + 1000000 };
+      expect(rainman._itemIsValid('123')).to.be.true;
+    });
+    it('should return false if the current time is after the expiry date', () => {
+      rainman.cache['123'] = { expires: new Date().getTime() - 1000000 };
+      expect(rainman._itemIsValid('123')).to.be.false;
+    });
+    it('should delete the cached item if the item is invalid', () => {
+      rainman.cache['123'] = { expires: 0 };
+      rainman._itemIsValid('123');
+      expect(rainman.cache['123']).to.be.undefined;
+    });
+  });
+  describe('Method: _getItemFromCache()', () => {
+    it('should return the requested item from the cache', () => {
+      const expectedCacheItem = rainman.cache['123'] = {
+        data: {},
+        expires: 0
+      };
+      expect(rainman._getItemFromCache('123')).to.deep.equal(expectedCacheItem);
+    });
+  });
+  describe('Method: get()', () => {
     beforeEach(() => {
       rainman = new Rainman(rainmanFixtures.validAPIKey);
       nock('http://api.openweathermap.org/data/2.5')
         .get('/weather')
-        .query(true)
-        .reply(200, {
-          body: openWeatherMapFixtures.validResponse
-        });
+        .query({
+          appid: rainmanFixtures.validAPIKey.key,
+          lat: 0,
+          lon: 0
+        })
+        .reply(200, openWeatherMapFixtures.validResponse);
     });
     afterEach(() => {
       nock.cleanAll();
     });
-    it('should query the API');
-    describe('When "_config.cache" is true', () => {
-      it('should save the result to cache');
+    it('should retrieve the correct data', async () => {
+      const result = await rainman.get([0, 0]);
+      expect(result).to.deep.equal(openWeatherMapFixtures.validResponse);
+    });
+    describe('When the requested resource is not in the cache', () => {
+      it('should cache if _config.cache is true', sinon.test(async () => {
+        const addToCacheSpy = sinon.spy(rainman, '_addToCache');
+        await rainman.get([0, 0]);
+        expect(addToCacheSpy.calledOnce).to.be.true;
+      }));
+      it('should not cache if _config.cache is false', sinon.test(async () => {
+        rainman = new Rainman(rainmanFixtures.noCache);
+        const addToCacheSpy = sinon.spy(rainman, '_addToCache');
+        await rainman.get([0, 0]);
+        expect(addToCacheSpy.notCalled).to.be.true;
+      }));
+    });
+    describe('When the requested resource is in the cache', () => {
+      describe('When the cached item is valid', () => {
+        it('should not make an API request to get new data', () => {
+          const fetchSpy = sinon.spy(global, 'fetch');
+          rainman.cache['00'] = {
+            data: {},
+            expires: new Date().getTime() + 10000
+          };
+          rainman.get([0, 0]);
+          expect(fetchSpy.calledOnce).to.be.false;
+          fetchSpy.restore();
+        });
+        it('should return the cached item', async () => {
+          const clock = sinon.useFakeTimers(new Date().getTime());
+          const cacheItem = rainman.cache['00'] = {
+            data: {
+              test: true
+            },
+            expires: new Date().getTime() + 10000
+          };
+          expect(await rainman.get([0, 0])).to.deep.equal(cacheItem.data);
+          clock.restore();
+        });
+      });
+      describe('When the cached item is invalid', () => {
+        beforeEach(() => {
+          rainman.cache['00'] = {
+            data: {},
+            expires: 0
+          };
+        });
+        it('should make an API request to get new data', () => {
+          const fetchSpy = sinon.spy(global, 'fetch');
+          rainman.get([0, 0]);
+          expect(fetchSpy.calledOnce).to.be.true;
+          fetchSpy.restore();
+        });
+        it('should overwrite the item in the cache with the new data', async () => {
+          await rainman.get([0, 0]);
+          expect(rainman.cache['00'].data).to.deep.equal(openWeatherMapFixtures.validResponse);
+        });
+      });
     });
   });
 });
