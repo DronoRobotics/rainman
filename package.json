@@ -1,6 +1,6 @@
 {
   "name": "rainman",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Weather forecast information",
   "main": "lib/index.js",
   "author": "Joe McKie <joe@joemck.ie>",
