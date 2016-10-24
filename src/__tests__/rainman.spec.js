@@ -84,6 +84,32 @@ describe('Rainman', () => {
       expect(rainman._getItemFromCache('123')).to.deep.equal(expectedCacheItem);
     });
   });
+  describe('Method: convertWindDegreesToDirection()', () => {
+    it('should return the correct direction label when given a value in degrees', () => {
+      const expectedValues = [
+        { label: 'N', value: 0 },
+        { label: 'NNE', value: 22.5 },
+        { label: 'NE', value: 45 },
+        { label: 'ENE', value: 67.5 },
+        { label: 'E', value: 90 },
+        { label: 'ESE', value: 112.5 },
+        { label: 'SE', value: 135 },
+        { label: 'SSE', value: 157.5 },
+        { label: 'S', value: 180 },
+        { label: 'SSW', value: 202.5 },
+        { label: 'SW', value: 225 },
+        { label: 'WSW', value: 247.5 },
+        { label: 'W', value: 270 },
+        { label: 'WNW', value: 292.5 },
+        { label: 'NW', value: 315 },
+        { label: 'NNW', value: 337.5 },
+        { label: 'N', value: 360 }
+      ];
+      expectedValues.forEach(direction => {
+        expect(rainman.convertWindDegreesToDirection(direction.value)).to.equal(direction.label);
+      });
+    });
+  });
   describe('Method: get()', () => {
     beforeEach(() => {
       rainman = new Rainman(rainmanFixtures.validAPIKey);
