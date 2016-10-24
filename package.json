@@ -1,6 +1,6 @@
 {
   "name": "rainman",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Weather forecast information",
   "main": "lib/index.js",
   "author": "Joe McKie <joe@joemck.ie>",
@@ -11,7 +11,7 @@
     "lint:staged": "lint-staged",
     "test": "mocha --compilers js:babel-core/register --require babel-polyfill src/__tests__/**/*.spec.js",
     "coverage": "nyc --check-coverage --lines 95 --functions 95 --branches 95 npm test",
-    "build": "babel src/index.js -o lib/index.js",
+    "build": "babel src -d lib --ignore __tests__",
     "prepublish": "BABEL_ENV=production npm run build"
   },
   "lint-staged": {

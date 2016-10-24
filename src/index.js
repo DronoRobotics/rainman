@@ -134,19 +134,23 @@ export default class Rainman {
       return this._getItemFromCache(cacheKey).data;
     }
 
-    const queryParams = [
-      `lat=${lat}`,
-      `lon=${lon}`,
-      `appid=${key}`
-    ].join('&');
-    const url = `http://api.openweathermap.org/data/2.5/weather?${queryParams}`;
-    const response = await fetch(url);
-    const jsonResponse = await response.json();
+    try {
+      const queryParams = [
+        `lat=${lat}`,
+        `lon=${lon}`,
+        `appid=${key}`
+      ].join('&');
+      const url = `http://api.openweathermap.org/data/2.5/weather?${queryParams}`;
+      const response = await fetch(url);
+      const jsonResponse = await response.json();
 
-    if (cache) {
-      this._addToCache(cacheKey, jsonResponse);
+      if (cache) {
+        this._addToCache(cacheKey, jsonResponse);
+      }
+
+      return jsonResponse;
+    } catch (error) {
+      throw new Error(error);
     }
-
-    return jsonResponse;
   }
 }
