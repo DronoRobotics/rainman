@@ -11,6 +11,11 @@ type CacheItem = {
   data: Object,
   expires: number
 };
+type WindDirection =
+  'N' | 'NNE' | 'NE' | 'ENE' |
+  'E' | 'ESE' | 'SE' | 'SSE' |
+  'S' | 'SSW' | 'SW' | 'WSW' |
+  'W' | 'WNW' | 'NW' | 'NNW'
 
 export default class Rainman {
   _config: Config;
@@ -89,6 +94,25 @@ export default class Rainman {
    */
   _getItemFromCache (key: string): CacheItem {
     return this.cache[key];
+  }
+
+  /**
+   * Converts a meteorological angle into a human readable wind direction.
+   *
+   * See http://climate.umn.edu/snow_fence/components/winddirectionanddegreeswithouttable3.htm for more info.
+   *
+   * @param {number} degrees - Wind direction in meteorological degrees
+   * @returns {string} - Wind direction label
+   */
+  convertWindDegreesToDirection (degrees: number): WindDirection {
+    const windDirectionLabels = [
+      'N', 'NNE', 'NE', 'ENE',
+      'E', 'ESE', 'SE', 'SSE',
+      'S', 'SSW', 'SW', 'WSW',
+      'W', 'WNW', 'NW', 'NNW',
+      'N' // Both 0º and 360º are north, so this needs to suffix the array
+    ];
+    return windDirectionLabels[parseInt((degrees + 11.25) / 22.5, 10)];
   }
 
   /**
