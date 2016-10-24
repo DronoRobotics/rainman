@@ -103,6 +103,25 @@ describe('Rainman', () => {
       const result = await rainman.get([0, 0]);
       expect(result).to.deep.equal(openWeatherMapFixtures.validResponse);
     });
+    it('should throw an error if the result cannot be retrieved', done => {
+      nock.cleanAll();
+      nock('http://api.openweathermap.org/data/2.5')
+        .get('/weather')
+        .query({
+          appid: rainmanFixtures.validAPIKey.key,
+          lat: 0,
+          lon: 0
+        })
+        .reply(408);
+      const response = rainman.get([0, 0]);
+      response.then(() => {
+        done(new Error('Promise should have been rejected'));
+      });
+      response.catch(error => {
+        expect(error).to.not.be.null;
+        done();
+      });
+    });
     describe('When the requested resource is not in the cache', () => {
       it('should cache if _config.cache is true', sinon.test(async () => {
         const addToCacheSpy = sinon.spy(rainman, '_addToCache');
