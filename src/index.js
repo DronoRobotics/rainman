@@ -1,6 +1,8 @@
 // @flow
 
-import 'isomorphic-fetch';
+if (!global.fetch) {
+  require('isomorphic-fetch');
+}
 
 type Config = {
   cache?: boolean,
