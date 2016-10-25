@@ -12,7 +12,26 @@ describe('Rainman', () => {
   beforeEach(() => {
     rainman = new Rainman(rainmanFixtures.validAPIKey);
   });
-  describe('initialisation', () => {
+  describe('Importation', () => {
+    const fetchCopy = global.fetch;
+    after(() => {
+      global.fetch = fetchCopy;
+      delete require.cache[require.resolve('../')];
+      require('../');
+    });
+    it('should import isomorphic-fetch if fetch is undefined', () => {
+      global.fetch = undefined;
+      require('../');
+      expect(fetch).to.be.defined;
+    });
+    it('should not import isomorphic-fetch fetch is defined', () => {
+      const fetchMock = { test: true };
+      global.fetch = fetchMock;
+      require('../');
+      expect(global.fetch).to.deep.equal(fetchMock);
+    });
+  });
+  describe('Initialisation', () => {
     it('should assign default values when passed no parameters', () => {
       const expectedValue = {
         ...rainmanFixtures.validAPIKey,
