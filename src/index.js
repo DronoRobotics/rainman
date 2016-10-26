@@ -5,6 +5,7 @@ if (!global.fetch) {
 }
 
 type Config = {
+  accuracy?: number,
   cache?: boolean,
   key: string,
   ttl?: number
@@ -30,11 +31,15 @@ export default class Rainman {
    * If an API key is not present, an error is thrown.
    *
    * @param {object} options - The options for the Rainman config
+   * @param {number} options.accuracy - The accuracy that the latitude & longitude will be searched to
+   * @param {boolean} options.cache - Whether to save the weather data to a cache
+   * @param {number} options.ttl - When cache is set to true, the Time To Live for each cache item
    * @returns {void}
    */
   constructor (options: Config) {
     try {
       this._config = {
+        accuracy: 2,
         cache: true,
         ttl: Math.pow(60, 3),
         ...options
@@ -125,11 +130,19 @@ export default class Rainman {
    * If the item is currently in the cache, it will return the cached item if it is still valid,
    * else it will make an API request and update the cached data with the new repsonse.
    *
-   * @param  {array}  lat, lon - Latitude and longitude
+   * To save on API requests and allow better caching, the latitude and longitude will be trimmed
+   * down to the accuracy level set in the config. The number of decimal places is the same as the
+   * accuracy level.
+   *
+   * @param {array} latLon - Latitude and longitude
    * @return {Promise<Object>} - The current weather object for the given latitude and longitude
    */
   async get ([lat, lon]: [number, number]): Promise<Object> {
-    const { cache, key } = this._config;
+    const { accuracy, cache, key } = this._config;
+
+    lat = parseFloat(lat.toFixed(accuracy));
+    lon = parseFloat(lon.toFixed(accuracy));
+
     const cacheKey = `${lat}${lon}`;
 
     if (this._itemExistsInCache(cacheKey) && this._itemIsValid(cacheKey)) {

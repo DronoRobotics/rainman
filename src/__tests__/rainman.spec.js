@@ -35,6 +35,7 @@ describe('Rainman', () => {
     it('should assign default values when passed no parameters', () => {
       const expectedValue = {
         ...rainmanFixtures.validAPIKey,
+        accuracy: 2,
         cache: true,
         ttl: Math.pow(60, 3)
       };
@@ -43,6 +44,7 @@ describe('Rainman', () => {
     it('should assign the config passed to the constructor', () => {
       const expectedValue = {
         ...rainmanFixtures.validAPIKey,
+        accuracy: 2,
         cache: false,
         ttl: Math.pow(60, 3)
       };
@@ -134,11 +136,7 @@ describe('Rainman', () => {
       rainman = new Rainman(rainmanFixtures.validAPIKey);
       nock('http://api.openweathermap.org/data/2.5')
         .get('/weather')
-        .query({
-          appid: rainmanFixtures.validAPIKey.key,
-          lat: 0,
-          lon: 0
-        })
+        .query(true)
         .reply(200, openWeatherMapFixtures.validResponse);
     });
     afterEach(() => {
@@ -147,6 +145,10 @@ describe('Rainman', () => {
     it('should retrieve the correct data', async () => {
       const result = await rainman.get([0, 0]);
       expect(result).to.deep.equal(openWeatherMapFixtures.validResponse);
+    });
+    it('should search at the correct accuracy level', async () => {
+      await rainman.get([1.2345, 6.7890]);
+      expect(rainman.cache['1.236.79']).to.not.be.undefined;
     });
     it('should throw an error if the result cannot be retrieved', done => {
       nock.cleanAll();
