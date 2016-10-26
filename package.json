@@ -7,9 +7,10 @@
   "license": "MIT",
   "scripts": {
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
-    "lint": "eslint . && npm run flow",
+    "lint": "eslint src && npm run flow",
     "lint:staged": "lint-staged",
-    "test": "mocha --compilers js:babel-core/register --require babel-polyfill src/__tests__/**/*.spec.js",
+    "test": "npm run lint && npm run test:mocha",
+    "test:mocha": "mocha --compilers js:babel-core/register --require babel-polyfill src/__tests__/**/*.spec.js",
     "coverage": "nyc --check-coverage --lines 95 --functions 95 --branches 95 npm test",
     "build": "babel src -d lib --ignore __tests__",
     "prepublish": "BABEL_ENV=production npm run build"
