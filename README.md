@@ -19,11 +19,12 @@ rainman.get([0, 0]).then(response => {
 
 #### Options
 
-| key   | type      | optional? | default |
-| ----- | --------- | --------- | ------- |
-| cache | *boolean* | *         | true    |
-| ttl   | *number*  | *         | 1 hour  |
-| key   | *string*  |           |         |
+| key      | type      | optional? | default |
+| -----    | --------- | --------- | ------- |
+| accuracy | *number*  | *         | 2       |
+| cache    | *boolean* | *         | true    |
+| ttl      | *number*  | *         | 1 hour  |
+| key      | *string*  |           |         |
 
 #### Roadmap
 
