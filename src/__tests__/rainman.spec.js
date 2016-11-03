@@ -38,6 +38,7 @@ describe('Rainman', () => {
         accuracy: 2,
         cache: true,
         ttl: Math.pow(60, 3),
+        units: 'metric',
       };
       expect(rainman._config).to.deep.equal(expectedValue);
     });
@@ -47,6 +48,7 @@ describe('Rainman', () => {
         accuracy: 2,
         cache: false,
         ttl: Math.pow(60, 3),
+        units: 'metric',
       };
       rainman = new Rainman(rainmanFixtures.noCache);
       expect(rainman._config).to.deep.equal(expectedValue);
@@ -149,6 +151,12 @@ describe('Rainman', () => {
     it('should search at the correct accuracy level', async () => {
       await rainman.get([1.2345, 6.7890]);
       expect(rainman.cache['1.236.79']).to.not.be.undefined;
+    });
+    it('should query using the correct units', async () => {
+      const fetchSpy = sinon.spy(global, 'fetch');
+      await rainman.get([0, 0]);
+      expect(fetchSpy.calledWithMatch(`units=${rainman._config.units}`)).to.be.true;
+      fetchSpy.restore();
     });
     it('should throw an error if the result cannot be retrieved', done => {
       nock.cleanAll();

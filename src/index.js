@@ -10,6 +10,7 @@ type ConfigType = {
   cache?: boolean,
   key: string,
   ttl?: number,
+  units: 'metric' | 'imperial',
 };
 type CacheItemType = {
   data: RainmanResponseType,
@@ -35,6 +36,7 @@ export default class Rainman {
    * @param {number} options.accuracy - The accuracy that the latitude & longitude will be searched to
    * @param {boolean} options.cache - Whether to save the weather data to a cache
    * @param {number} options.ttl - When cache is set to true, the Time To Live for each cache item
+   * @param {string} options.units - The unit system in which to retrieve temperature
    * @returns {void}
    */
   constructor (options: ConfigType) {
@@ -43,6 +45,7 @@ export default class Rainman {
         accuracy: 2,
         cache: true,
         ttl: Math.pow(60, 3),
+        units: 'metric',
         ...options,
       };
 
@@ -139,7 +142,7 @@ export default class Rainman {
    * @return {Promise<Object>} - The current weather object for the given latitude and longitude
    */
   async get ([lat, lon]: [number, number]): Promise<RainmanResponseType> {
-    const { accuracy, cache, key } = this._config;
+    const { accuracy, cache, key, units } = this._config;
 
     lat = parseFloat(lat.toFixed(accuracy));
     lon = parseFloat(lon.toFixed(accuracy));
@@ -155,6 +158,7 @@ export default class Rainman {
         `lat=${lat}`,
         `lon=${lon}`,
         `appid=${key}`,
+        `units=${units}`,
       ].join('&');
       const url = `http://api.openweathermap.org/data/2.5/weather?${queryParams}`;
       const response = await fetch(url);

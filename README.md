@@ -25,6 +25,7 @@ rainman.get([0, 0]).then(response => {
 | cache    | *boolean* | *         | true    |
 | ttl      | *number*  | *         | 1 hour  |
 | key      | *string*  |           |         |
+| units    | *string*  | *         | celcius |
 
 #### Roadmap
 
