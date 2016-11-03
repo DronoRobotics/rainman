@@ -4,25 +4,26 @@ if (!global.fetch) {
   require('isomorphic-fetch');
 }
 
-type Config = {
+type RainmanResponseType = {};
+type ConfigType = {
   accuracy?: number,
   cache?: boolean,
   key: string,
-  ttl?: number
+  ttl?: number,
 };
-type CacheItem = {
-  data: Object,
-  expires: number
+type CacheItemType = {
+  data: RainmanResponseType,
+  expires: number,
 };
-type WindDirection =
+type WindDirectionType =
   'N' | 'NNE' | 'NE' | 'ENE' |
   'E' | 'ESE' | 'SE' | 'SSE' |
   'S' | 'SSW' | 'SW' | 'WSW' |
-  'W' | 'WNW' | 'NW' | 'NNW'
+  'W' | 'WNW' | 'NW' | 'NNW';
 
 export default class Rainman {
-  _config: Config;
-  cache: Object;
+  _config: ConfigType;
+  cache: {[key: string]: CacheItemType};
 
   /**
    * Builds the Rainman class.
@@ -36,13 +37,13 @@ export default class Rainman {
    * @param {number} options.ttl - When cache is set to true, the Time To Live for each cache item
    * @returns {void}
    */
-  constructor (options: Config) {
+  constructor (options: ConfigType) {
     try {
       this._config = {
         accuracy: 2,
         cache: true,
         ttl: Math.pow(60, 3),
-        ...options
+        ...options,
       };
 
       if (!this._config.key) {
@@ -61,10 +62,10 @@ export default class Rainman {
    * @param {object} value - The data to be saved to the cache
    * @returns {void}
    */
-  _addToCache (key: string, value: Object) {
-    const cacheItem: CacheItem = {
+  _addToCache (key: string, value: RainmanResponseType) {
+    const cacheItem: CacheItemType = {
       data: value,
-      expires: new Date().getTime() + this._config.ttl
+      expires: new Date().getTime() + this._config.ttl,
     };
     this.cache[key] = cacheItem;
   }
@@ -99,7 +100,7 @@ export default class Rainman {
    * @returns {object} - The cached item
    *
    */
-  _getItemFromCache (key: string): CacheItem {
+  _getItemFromCache (key: string): CacheItemType {
     return this.cache[key];
   }
 
@@ -111,13 +112,13 @@ export default class Rainman {
    * @param {number} degrees - Wind direction in meteorological degrees
    * @returns {string} - Wind direction label
    */
-  convertWindDegreesToDirection (degrees: number): WindDirection {
+  convertWindDegreesToDirection (degrees: number): WindDirectionType {
     const windDirectionLabels = [
       'N', 'NNE', 'NE', 'ENE',
       'E', 'ESE', 'SE', 'SSE',
       'S', 'SSW', 'SW', 'WSW',
       'W', 'WNW', 'NW', 'NNW',
-      'N' // Both 0º and 360º are north, so this needs to suffix the array
+      'N', // Both 0º and 360º are north, so this needs to suffix the array
     ];
     return windDirectionLabels[parseInt((degrees + 11.25) / 22.5, 10)];
   }
@@ -137,7 +138,7 @@ export default class Rainman {
    * @param {array} latLon - Latitude and longitude
    * @return {Promise<Object>} - The current weather object for the given latitude and longitude
    */
-  async get ([lat, lon]: [number, number]): Promise<Object> {
+  async get ([lat, lon]: [number, number]): Promise<RainmanResponseType> {
     const { accuracy, cache, key } = this._config;
 
     lat = parseFloat(lat.toFixed(accuracy));
@@ -153,7 +154,7 @@ export default class Rainman {
       const queryParams = [
         `lat=${lat}`,
         `lon=${lon}`,
-        `appid=${key}`
+        `appid=${key}`,
       ].join('&');
       const url = `http://api.openweathermap.org/data/2.5/weather?${queryParams}`;
       const response = await fetch(url);

@@ -37,7 +37,7 @@ describe('Rainman', () => {
         ...rainmanFixtures.validAPIKey,
         accuracy: 2,
         cache: true,
-        ttl: Math.pow(60, 3)
+        ttl: Math.pow(60, 3),
       };
       expect(rainman._config).to.deep.equal(expectedValue);
     });
@@ -46,7 +46,7 @@ describe('Rainman', () => {
         ...rainmanFixtures.validAPIKey,
         accuracy: 2,
         cache: false,
-        ttl: Math.pow(60, 3)
+        ttl: Math.pow(60, 3),
       };
       rainman = new Rainman(rainmanFixtures.noCache);
       expect(rainman._config).to.deep.equal(expectedValue);
@@ -64,7 +64,7 @@ describe('Rainman', () => {
       rainman = new Rainman(rainmanFixtures.validAPIKey);
       const expectedValue = {
         data: openWeatherMapFixtures.validResponse,
-        expires: new Date().getTime() + rainman._config.ttl
+        expires: new Date().getTime() + rainman._config.ttl,
       };
       const key = '12345678';
       rainman._addToCache(key, openWeatherMapFixtures.validResponse);
@@ -100,7 +100,7 @@ describe('Rainman', () => {
     it('should return the requested item from the cache', () => {
       const expectedCacheItem = rainman.cache['123'] = {
         data: {},
-        expires: 0
+        expires: 0,
       };
       expect(rainman._getItemFromCache('123')).to.deep.equal(expectedCacheItem);
     });
@@ -124,7 +124,7 @@ describe('Rainman', () => {
         { label: 'WNW', value: 292.5 },
         { label: 'NW', value: 315 },
         { label: 'NNW', value: 337.5 },
-        { label: 'N', value: 360 }
+        { label: 'N', value: 360 },
       ];
       expectedValues.forEach(direction => {
         expect(rainman.convertWindDegreesToDirection(direction.value)).to.equal(direction.label);
@@ -157,7 +157,7 @@ describe('Rainman', () => {
         .query({
           appid: rainmanFixtures.validAPIKey.key,
           lat: 0,
-          lon: 0
+          lon: 0,
         })
         .reply(408);
       const response = rainman.get([0, 0]);
@@ -188,7 +188,7 @@ describe('Rainman', () => {
           const fetchSpy = sinon.spy(global, 'fetch');
           rainman.cache['00'] = {
             data: {},
-            expires: new Date().getTime() + 10000
+            expires: new Date().getTime() + 10000,
           };
           rainman.get([0, 0]);
           expect(fetchSpy.calledOnce).to.be.false;
@@ -198,9 +198,9 @@ describe('Rainman', () => {
           const clock = sinon.useFakeTimers(new Date().getTime());
           const cacheItem = rainman.cache['00'] = {
             data: {
-              test: true
+              test: true,
             },
-            expires: new Date().getTime() + 10000
+            expires: new Date().getTime() + 10000,
           };
           expect(await rainman.get([0, 0])).to.deep.equal(cacheItem.data);
           clock.restore();
@@ -210,7 +210,7 @@ describe('Rainman', () => {
         beforeEach(() => {
           rainman.cache['00'] = {
             data: {},
-            expires: 0
+            expires: 0,
           };
         });
         it('should make an API request to get new data', () => {

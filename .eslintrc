@@ -8,11 +8,11 @@ globals:
   fetch: true
 plugins:
   - mocha
+  - flowtype
 sourceType: "module"
 parser: "babel-eslint"
 ecmaFeatures:
   blockBindings: true
-  jsx: true
 rules:
   # Possible errors
   valid-jsdoc: 2
@@ -24,14 +24,18 @@ rules:
   consistent-return: 1
   curly: 2
   default-case: 2
-  dot-location: [2, "property"]
+  dot-location:
+    - 2
+    - property
   eqeqeq: 1
   no-alert: 2
   no-else-return: 1
   no-eval: 2
   no-extra-bind: 1
   no-floating-decimal: 2
-  jsx-quotes: [2, "prefer-double"]
+  jsx-quotes:
+    - 2
+    - prefer-double
 
   # Variables
   no-use-before-define: 2
@@ -48,12 +52,18 @@ rules:
   spaced-comment: 1
   sort-keys: 1
   sort-vars: 1
-  quotes: [1, "single"]
+  quotes:
+    - 1
+    - single
   array-bracket-spacing: 1
-  comma-dangle: [1, "never"]
+  comma-dangle:
+    - 1
+    - always-multiline
   comma-spacing: 1
   key-spacing: 1
-  operator-assignment: [1, "always"]
+  operator-assignment:
+    - 1
+    - always
   new-cap: 1
   no-bitwise: 1
   no-multiple-empty-lines: [1, {
@@ -62,13 +72,21 @@ rules:
   }]
   no-unneeded-ternary: 1
   no-tabs: 1
-  quote-props: [1, "as-needed"]
+  quote-props:
+    - 1
+    - as-needed
   semi: 2
-  space-in-parens: [1, "never"]
+  space-in-parens:
+    - 1
+    - never
 
   # ES6 Styling
-  arrow-body-style: [1, "as-needed"]
-  arrow-parens: [1, "as-needed"]
+  arrow-body-style:
+    - 1
+    - as-needed
+  arrow-parens:
+    - 1
+    - as-needed
   arrow-spacing: 1
   no-duplicate-imports: 1
   no-var: 1
@@ -86,3 +104,20 @@ rules:
 
   # Mocha linting
   mocha/no-exclusive-tests: 2 # Prevent any .only() tests getting in, which could skew CI build results
+
+  flowtype/define-flow-type: 1
+  flowtype/boolean-style: 2
+  flowtype/object-type-delimiter: 2
+  flowtype/union-intersection-spacing: 2
+  flowtype/type-id-match:
+    - 2
+    - '^(([A-Z][a-z0-9]*)+Type)$|^(Props|State)$'
+  flowtype/delimiter-dangle:
+    - 2
+    - always-multiline
+  flowtype/space-before-type-colon: 2
+  flowtype/space-after-type-colon: 2
+  flowtype/space-before-generic-bracket: 2
+  flowtype/sort-keys: 2
+  flowtype/semi: 2
+  flowtype/no-weak-types: 2
