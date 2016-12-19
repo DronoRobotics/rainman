@@ -158,7 +158,7 @@ describe('Rainman', () => {
       expect(fetchSpy.calledWithMatch(`units=${rainman._config.units}`)).to.be.true;
       fetchSpy.restore();
     });
-    it('should throw an error if the result cannot be retrieved', done => {
+    it('should throw an error if the result cannot be retrieved', async () => {
       nock.cleanAll();
       nock('http://api.openweathermap.org/data/2.5')
         .get('/weather')
@@ -166,16 +166,15 @@ describe('Rainman', () => {
           appid: rainmanFixtures.validAPIKey.key,
           lat: 0,
           lon: 0,
+          units: 'metric',
         })
         .reply(408);
-      const response = rainman.get([0, 0]);
-      response.then(() => {
-        done(new Error('Promise should have been rejected'));
-      });
-      response.catch(error => {
-        expect(error).to.not.be.null;
-        done();
-      });
+
+      try {
+        await rainman.get([0, 0]);
+      } catch (error) {
+        expect(error.message).to.equal('408');
+      }
     });
     describe('When the requested resource is not in the cache', () => {
       it('should cache if _config.cache is true', sinon.test(async () => {

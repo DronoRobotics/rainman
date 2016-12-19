@@ -162,6 +162,11 @@ export default class Rainman {
       ].join('&');
       const url = `http://api.openweathermap.org/data/2.5/weather?${queryParams}`;
       const response = await fetch(url);
+
+      if (!response.ok) {
+        throw response.status;
+      }
+
       const jsonResponse = await response.json();
 
       if (cache) {
