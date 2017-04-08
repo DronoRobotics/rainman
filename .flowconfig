@@ -1,2 +1,6 @@
+[ignore]
+# Ignore malformed json
+.*/node_modules/nock/node_modules/changelog/examples/node.json
+
 [version]
 ^0.37.0
