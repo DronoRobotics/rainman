@@ -13,7 +13,7 @@ import Rainman from '../';
 describe('Rainman', () => {
   let rainman;
   beforeEach(() => {
-    rainman = new Rainman(rainmanFixtures.validAPIKey);
+    rainman = new Rainman(rainmanFixtures.openWeatherMapProvider);
   });
   describe('Importation', () => {
     const fetchCopy = global.fetch;
@@ -37,7 +37,7 @@ describe('Rainman', () => {
   describe('Initialisation', () => {
     it('should assign default values when passed no parameters', () => {
       const expectedValue = {
-        ...rainmanFixtures.validAPIKey,
+        ...rainmanFixtures.openWeatherMapProvider,
         accuracy: 2,
         cache: true,
         ttl: Math.pow(60, 3),
@@ -47,26 +47,35 @@ describe('Rainman', () => {
     });
     it('should assign the config passed to the constructor', () => {
       const expectedValue = {
-        ...rainmanFixtures.validAPIKey,
+        ...rainmanFixtures.openWeatherMapProvider,
         accuracy: 2,
         cache: false,
         ttl: Math.pow(60, 3),
         units: 'metric',
       };
-      rainman = new Rainman(rainmanFixtures.noCache);
+      rainman = new Rainman({
+        ...rainmanFixtures.noCache,
+        ...rainmanFixtures.openWeatherMapProvider,
+      });
       expect(rainman._config).to.deep.equal(expectedValue);
     });
     it('should create an empty cache', () => {
       expect(rainman.cache).to.deep.equal({});
     });
     it('should throw an error when passing an invalid API key', () => {
-      expect(() => new Rainman(rainmanFixtures.invalidAPIKey)).to.throw('Invalid API Key provided to Rainman!');
+      expect(() => new Rainman({
+        ...rainmanFixtures.openWeatherMapProvider,
+        ...rainmanFixtures.invalidAPIKey,
+      })).to.throw();
+    });
+    it('should throw an error if no provider is selected', () => {
+      expect(() => new Rainman(rainmanFixtures.validAPIKey)).to.throw();
     });
   });
   describe('Method: _addToCache()', () => {
     it('should save the given object to the cache', () => {
       const clock = sinon.useFakeTimers(new Date().getTime());
-      rainman = new Rainman(rainmanFixtures.validAPIKey);
+      rainman = new Rainman(rainmanFixtures.openWeatherMapProvider);
       const expectedValue = {
         data: openWeatherMapFixtures.validResponse,
         expires: new Date().getTime() + rainman._config.ttl,
@@ -136,9 +145,18 @@ describe('Rainman', () => {
       });
     });
   });
+  describe('Method: _buildProviderQuery', () => {
+    it('should throw an error if no provider is selected', async () => {
+      // In theory this is a useless test seeing as the provider is checked on class construction,
+      // but it's worth checking in case the config is overwritten after the fact
+      rainman = new Rainman(rainmanFixtures.openWeatherMapProvider);
+      rainman._config.provider = null;
+      expect(() => rainman._buildProviderQuery([0, 0])).to.throw();
+    });
+  });
   describe('Method: get()', () => {
     beforeEach(() => {
-      rainman = new Rainman(rainmanFixtures.validAPIKey);
+      rainman = new Rainman(rainmanFixtures.openWeatherMapProvider);
       nock('http://api.openweathermap.org/data/2.5')
         .get('/weather')
         .query(true)
@@ -146,6 +164,24 @@ describe('Rainman', () => {
     });
     afterEach(() => {
       nock.cleanAll();
+    });
+    it('should query openWeatherMap if config.provider = openweathermap', async () => {
+      const fetchSpy = sinon.spy(global, 'fetch');
+      rainman = new Rainman(rainmanFixtures.openWeatherMapProvider);
+      await rainman.get([0, 0]);
+      expect(fetchSpy.calledWithMatch('api.openweathermap.org')).to.be.true;
+      fetchSpy.restore();
+    });
+    it('should query DarkSky if config.provider = darksky', async () => {
+      const fetchSpy = sinon.spy(global, 'fetch');
+      nock('https://api.darksky.net')
+        .get(`/forecast/${rainmanFixtures.validAPIKey.key}/0,0`)
+        .query(true)
+        .reply(200, darkSkyFixtures.validResponse);
+      rainman = new Rainman(rainmanFixtures.darkSkyProvider);
+      await rainman.get([0, 0]);
+      expect(fetchSpy.calledWithMatch('api.darksky.net')).to.be.true;
+      fetchSpy.restore();
     });
     it('should retrieve the correct data', async () => {
       const result = await rainman.get([0, 0]);
@@ -162,7 +198,6 @@ describe('Rainman', () => {
       fetchSpy.restore();
     });
     it('should throw an error if the result cannot be retrieved', async () => {
-      nock.cleanAll();
       nock('http://api.openweathermap.org/data/2.5')
         .get('/weather')
         .query({
@@ -186,7 +221,10 @@ describe('Rainman', () => {
         expect(addToCacheSpy.calledOnce).to.be.true;
       }));
       it('should not cache if _config.cache is false', sinon.test(async () => {
-        rainman = new Rainman(rainmanFixtures.noCache);
+        rainman = new Rainman({
+          ...rainmanFixtures.openWeatherMapProvider,
+          ...rainmanFixtures.noCache,
+        });
         const addToCacheSpy = sinon.spy(rainman, '_addToCache');
         await rainman.get([0, 0]);
         expect(addToCacheSpy.notCalled).to.be.true;

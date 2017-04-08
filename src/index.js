@@ -9,6 +9,7 @@ type ConfigType = {
   accuracy?: number,
   cache?: boolean,
   key: string,
+  provider: 'darksky' | 'openweathermap',
   ttl?: number,
   units: 'metric' | 'imperial',
 };
@@ -21,6 +22,7 @@ type WindDirectionType =
   'E' | 'ESE' | 'SE' | 'SSE' |
   'S' | 'SSW' | 'SW' | 'WSW' |
   'W' | 'WNW' | 'NW' | 'NNW';
+type LatLngType = [number, number];
 
 export default class Rainman {
   _config: ConfigType;
@@ -39,24 +41,23 @@ export default class Rainman {
    * @param {string} options.units - The unit system in which to retrieve temperature
    * @returns {void}
    */
-  constructor (options: ConfigType) {
-    try {
-      this._config = {
-        accuracy: 2,
-        cache: true,
-        ttl: Math.pow(60, 3),
-        units: 'metric',
-        ...options,
-      };
-
-      if (!this._config.key) {
-        throw 'Invalid API Key provided to Rainman!';
-      }
-
-      this.cache = {};
-    } catch (e) {
-      throw new Error(e);
+  constructor (options: ConfigType): void {
+    if (!options.provider) {
+      throw 'No provider was passed to Rainman';
     }
+
+    if (!options.key) {
+      throw 'No API key provided to Rainman';
+    }
+
+    this._config = {
+      accuracy: 2,
+      cache: true,
+      ttl: Math.pow(60, 3),
+      units: 'metric',
+      ...options,
+    };
+    this.cache = {};
   }
 
   /**
@@ -65,7 +66,7 @@ export default class Rainman {
    * @param {object} value - The data to be saved to the cache
    * @returns {void}
    */
-  _addToCache (key: string, value: RainmanResponseType) {
+  _addToCache (key: string, value: RainmanResponseType): void {
     const cacheItem: CacheItemType = {
       data: value,
       expires: new Date().getTime() + this._config.ttl,
@@ -108,6 +109,38 @@ export default class Rainman {
   }
 
   /**
+   * Builds the request string for the chosen provider
+   * @param {array} latLon - Latitude and longitude
+   * @returns {string} - A valid URL
+   */
+  _buildProviderQuery ([lat, lon]: LatLngType): string {
+    const { key, provider, units } = this._config;
+
+    const baseUrls = {
+      darkSky: 'https://api.darksky.net/forecast',
+      openWeatherMap: 'http://api.openweathermap.org/data/2.5/weather',
+    };
+
+    if (provider === 'openweathermap') {
+      const queryParams = [
+        `lat=${lat}`,
+        `lon=${lon}`,
+        `appid=${key}`,
+        `units=${units}`,
+      ].join('&');
+      return `${baseUrls.openWeatherMap}?${queryParams}`;
+    } else if (provider === 'darksky') {
+      const queryParams = [
+        'exclude=[minutely,hourly,daily,alerts,flags]',
+        `units=${units}`,
+      ].join('&');
+      return `${baseUrls.darkSky}/${key}/${lat},${lon}?${queryParams}`;
+    }
+
+    throw `Couldn\'t find a configuration for provider: ${provider}`;
+  }
+
+  /**
    * Converts a meteorological angle into a human readable wind direction.
    *
    * See http://climate.umn.edu/snow_fence/components/winddirectionanddegreeswithouttable3.htm for more info.
@@ -141,8 +174,8 @@ export default class Rainman {
    * @param {array} latLon - Latitude and longitude
    * @return {Promise<Object>} - The current weather object for the given latitude and longitude
    */
-  async get ([lat, lon]: [number, number]): Promise<RainmanResponseType> {
-    const { accuracy, cache, key, units } = this._config;
+  async get ([lat, lon]: LatLngType): Promise<RainmanResponseType> {
+    const { accuracy, cache } = this._config;
 
     lat = parseFloat(lat.toFixed(accuracy));
     lon = parseFloat(lon.toFixed(accuracy));
@@ -154,13 +187,7 @@ export default class Rainman {
     }
 
     try {
-      const queryParams = [
-        `lat=${lat}`,
-        `lon=${lon}`,
-        `appid=${key}`,
-        `units=${units}`,
-      ].join('&');
-      const url = `http://api.openweathermap.org/data/2.5/weather?${queryParams}`;
+      const url = this._buildProviderQuery([lat, lon]);
       const response = await fetch(url);
 
       if (!response.ok) {
