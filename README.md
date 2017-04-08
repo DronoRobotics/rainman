@@ -30,4 +30,5 @@ rainman.get([0, 0]).then(response => {
 #### Roadmap
 
 * Integrate extra services (Yahoo, DarkSky)
+* Add a backup provider, in case the default provider times out
 * Give the option to standardise API responses into a single object
