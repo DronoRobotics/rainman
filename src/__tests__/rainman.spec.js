@@ -2,8 +2,11 @@ import { expect } from 'chai';
 import nock from 'nock';
 import sinon from 'sinon';
 
-import * as rainmanFixtures from './__fixtures__/rainman.fixture';
-import * as openWeatherMapFixtures from './__fixtures__/openWeatherMap.fixture';
+import {
+  rainmanFixtures,
+  openWeatherMapFixtures,
+  darkSkyFixtures,
+} from './__fixtures__';
 
 import Rainman from '../';
 

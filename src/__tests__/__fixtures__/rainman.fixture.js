@@ -4,3 +4,11 @@ export const noCache = {
   ...validAPIKey,
   cache: false,
 };
+export const openWeatherMapProvider = {
+  ...validAPIKey,
+  provider: 'openweathermap',
+};
+export const darkSkyProvider = {
+  ...validAPIKey,
+  provider: 'darksky',
+};
