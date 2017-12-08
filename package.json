@@ -33,7 +33,7 @@
     "babel-preset-es2015": "^6.16.0",
     "babili": "^0.0.9",
     "chai": "^3.5.0",
-    "eslint": "^3.8.1",
+    "eslint": "^4.13.0",
     "eslint-plugin-flowtype": "^2.25.0",
     "eslint-plugin-mocha": "^4.7.0",
     "flow-bin": "^0.37.0",
